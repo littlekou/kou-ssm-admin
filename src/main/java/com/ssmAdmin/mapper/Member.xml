@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssmAdmin.dao.MemberDao">
+    <resultMap id="BaseResultMap" type="com.ssmAdmin.entity.sqlEntity.Member" >
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="cname" property="cname" jdbcType="VARCHAR" />
+        <result column="login_name" property="loginName" jdbcType="VARCHAR" />
+        <result column="role_id" property="roleId" jdbcType="BIGINT" />
+        <result column="password" property="password" jdbcType="VARCHAR" />
+        <result column="rate" property="rate" jdbcType="VARCHAR" />
+        <result column="token" property="token" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="BIGINT" />
+        <result column="freeze_balance" property="freezeBalance" jdbcType="VARCHAR" />
+        <result column="balance" property="balance" jdbcType="VARCHAR" />
+        <result column="add_time" property="addTime" jdbcType="TIMESTAMP" />
+        <result column="modify_time" property="modifyTime" jdbcType="TIMESTAMP" />
+        <result column="create_by" property="createBy" jdbcType="VARCHAR" />
+        <result column="agent_id" property="agentId" jdbcType="VARCHAR" />
+        <result column="ips" property="ips" jdbcType="VARCHAR" />
+        <result column="pay_password" property="payPassword" jdbcType="VARCHAR" />
+        <result column="google_secret_key" property="googleSecretKey" jdbcType="VARCHAR" />
+        <result column="phone" property="phone" jdbcType="VARCHAR" />
+    </resultMap>
+    <sql id="Base_All_List" >
+    id,cname,login_name,role_id,password,rate,token,status,freeze_balance,balance,add_time,modify_time,create_by,agent_id,ips,pay_password,google_secret_key,phone
+    </sql>
+    <sql id="Base_Column_List" >
+    id,cname,login_name,role_id,rate,status,freeze_balance,balance,add_time,modify_time,create_by,agent_id,ips,pay_password,phone
+    </sql>
+    <select id="getMemberByMobile" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_All_List" />
+        FROM member WHERE login_name=#{loginName}
+        <if test="status!=null">and status=#{status}</if>
+    </select>
+    <select id="getMemberById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM member WHERE id=#{id}
+ 	</select>
+
+    <select id="getParameterByParam" parameterType="string" resultType="string">
+        SELECT ${param1} FROM member WHERE ${param2}=#{param3}
+ 	</select>
+
+    <select id="getMerchantList" parameterType="map" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM member
+        where 1=1
+        <if test="loginName != null">
+            and login_name like concat(#{loginName,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="cname != null and cname != ''">
+            and cname like concat(#{cname,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="roleId != null">
+            and role_id =#{roleId}
+        </if>
+        <if test="status != null">
+            AND status=#{status}
+        </if>
+        ORDER BY add_time DESC
+    </select>
+
+    <select id="getBillList" parameterType="map" resultType="map">
+        select
+        m.id AS merchantId,
+        m.cname as cname,
+        m.balance AS availableAmount,
+        (SELECT SUM(o1.order_price) as orderPrice FROM orders AS o1 WHERE o1.merchant_id = m.id AND o1.`status` IN
+        (2,4)) AS orderPrice,
+        (SELECT SUM(o2.pay_price) FROM orders AS o2 WHERE o2.merchant_id = m.id AND o2.`status` IN (2,4) ) AS payPrice,
+        (SELECT SUM(o3.service_charge) FROM orders AS o3 WHERE o3.merchant_id = m.id AND o3.`status` IN (2,4) ) AS
+        serviceCharge,
+        (SELECT count(o4.id) as ids FROM orders AS o4 WHERE o4.merchant_id = m.id ) AS ids,
+        (SELECT SUM(ooo.amount) FROM out_of_orders AS ooo WHERE ooo.merchant_id = m.id ) AS presentAmount
+        from member m
+        where 1=1
+        <if test="merchantId != null and merchantId != 0">
+            and m.id=#{merchantId}
+        </if>
+        group by m.id order by m.id
+    </select>
+
+    <update id="updateMemberParam">
+	    update member
+	    set ${param1} = #{param2}
+	    where id = #{id}
+	</update>
+
+    <update id="updateMember" parameterType="com.ssmAdmin.entity.sqlEntity.Member">
+        update member
+        <set>
+            <if test="cname != null">
+                cname = #{cname,jdbcType=VARCHAR},
+            </if>
+            <if test="loginName != null">
+                login_name = #{loginName,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                password = #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="rate != null">
+                rate = #{rate,jdbcType=VARCHAR},
+            </if>
+            <if test="token != null">
+                token = #{token,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                status = #{status,jdbcType=INTEGER},
+            </if>
+            <if test="balance != null">
+                balance = #{balance,jdbcType=DECIMAL},
+            </if>
+            <if test="modifyTime != null">
+                modify_time = #{modifyTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null and createBy != 0">
+                create_by = #{createBy},
+            </if>
+            <if test="agentId != null and agentId != 0">
+                agent_id = #{agentId},
+            </if>
+            <if test="payPassword != null and payPassword !=''">
+                pay_password = #{payPassword},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="updateMemberBalance">
+	    update member
+	    set balance = balance+#{balance,jdbcType=DECIMAL}
+	    where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <update id="updateMemberBalanceByMId">
+		update member
+	    set balance = balance-#{balance,jdbcType=DECIMAL}
+	    where id = #{id,jdbcType=BIGINT}
+	</update>
+
+    <insert id="insertMember" parameterType="com.ssmAdmin.entity.sqlEntity.Member" useGeneratedKeys="true" keyProperty="id">
+        insert into member
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="cname != null">
+                cname,
+            </if>
+            <if test="loginName != null">
+                login_name,
+            </if>
+            <if test="roleId != null">
+                role_id,
+            </if>
+            <if test="password != null">
+                password,
+            </if>
+            <if test="rate != null">
+                rate,
+            </if>
+            <if test="token != null">
+                token,
+            </if>
+            <if test="status != null">
+                status,
+            </if>
+            <if test="balance != null">
+                balance,
+            </if>
+            <if test="addTime != null">
+                add_time,
+            </if>
+            <if test="modifyTime != null">
+                modify_time,
+            </if>
+            <if test="createBy != null">
+                create_by,
+            </if>
+            <if test="agentId != null">
+                agent_id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id},
+            </if>
+            <if test="cname != null">
+                #{cname,jdbcType=VARCHAR},
+            </if>
+            <if test="loginName != null">
+                #{loginName,jdbcType=VARCHAR},
+            </if>
+            <if test="roleId != null">
+                #{roleId,jdbcType=INTEGER},
+            </if>
+            <if test="password != null">
+                #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="rate != null">
+                #{rate,jdbcType=VARCHAR},
+            </if>
+            <if test="token != null">
+                #{token,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=INTEGER},
+            </if>
+            <if test="balance != null">
+                #{balance,jdbcType=DECIMAL},
+            </if>
+            <if test="addTime != null">
+                #{addTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="modifyTime != null">
+                #{modifyTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                #{createBy},
+            </if>
+            <if test="agentId != null">
+                #{agentId},
+            </if>
+        </trim>
+    </insert>
+    <delete id="deleteUser" parameterType="java.lang.Long">
+		delete from member
+		where id=#{id}
+    </delete>
+
+
+
+</mapper>

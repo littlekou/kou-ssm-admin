@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ssmAdmin.dao.MenuDao" >
+  <resultMap id="BaseResultMap" type="com.ssmAdmin.entity.sqlEntity.Menu" >
+    <id column="menu_id" property="menuId" jdbcType="BIGINT" />
+    <result column="menu_name" property="menuName" jdbcType="VARCHAR" />
+    <result column="menu_action" property="menuAction" jdbcType="VARCHAR" />
+    <result column="menu_seq" property="menuSeq" jdbcType="VARCHAR" />
+    <result column="pid" property="pid" jdbcType="BIGINT" />
+    <result column="created_time" property="createdTime" jdbcType="TIMESTAMP" />
+    <result column="updated_time" property="updatedTime" jdbcType="TIMESTAMP" />
+    <result column="is_effective" property="isEffective" jdbcType="BIGINT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    menu_id, menu_name, menu_action, menu_seq, pid, created_time, updated_time, is_effective
+  </sql>
+  <select id="getMenuByParams" resultMap="BaseResultMap" parameterType="map" >
+    select 
+    <include refid="Base_Column_List" />
+    from menu
+    where 1=1
+     <if test="menuId != null" >
+       and menu_id = #{menuId,jdbcType=BIGINT}
+     </if>
+     <if test="menuIds != null" >
+       and menu_id in 
+       <foreach collection="menuIds" index="index" item="item" open="(" separator="," close=")">
+               #{item}       
+       </foreach>        
+     </if>
+     <if test="menuName != null" >
+       and menu_name like concat(#{menuName,jdbcType=VARCHAR},'%')
+     </if>
+     <if test="menuAction != null" >
+       and menu_action = #{menuAction,jdbcType=VARCHAR}
+     </if>
+     <if test="menuSeq != null" >
+       and menu_seq = #{menuSeq,jdbcType=VARCHAR}
+     </if>
+     <if test="pid != null" >
+       and pid = #{pid,jdbcType=BIGINT}
+     </if>
+   	 <if test="startTime != null">
+   	   AND created_time &gt;= #{startTime}
+   	 </if>
+     <if test="endTime != null">
+    	AND created_time &lt;= #{endTime}
+   	 </if>     
+     <if test="isEffective != null" >
+       and is_effective = #{isEffective,jdbcType=BIGINT}
+     </if>
+    <if test="menuType != null" >
+      and (menu_type = #{menuType,jdbcType=BIGINT} or menu_type = 0)
+    </if>
+    ORDER BY   is_effective DESC , menu_seq ASC , menu_id ASC
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select 
+    <include refid="Base_Column_List" />
+    from menu
+    where menu_id = #{menuId,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from menu
+    where menu_id = #{menuId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="com.ssmAdmin.entity.sqlEntity.Menu" >
+    insert into menu (menu_id, menu_name, menu_action,
+      menu_seq, pid, created_time, 
+      updated_time, is_effective)
+    values (#{menuId,jdbcType=BIGINT}, #{menuName,jdbcType=VARCHAR}, #{menuAction,jdbcType=VARCHAR}, 
+      #{menuSeq,jdbcType=VARCHAR}, #{pid,jdbcType=BIGINT}, #{createdTime,jdbcType=TIMESTAMP}, 
+      #{updatedTime,jdbcType=TIMESTAMP}, #{isEffective,jdbcType=BIGINT})
+  </insert>
+  <insert id="insertMenu" parameterType="com.ssmAdmin.entity.sqlEntity.Menu" >
+    insert into menu
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="menuId != null" >
+        menu_id,
+      </if>
+      <if test="menuName != null" >
+        menu_name,
+      </if>
+      <if test="menuAction != null" >
+        menu_action,
+      </if>
+      <if test="menuSeq != null" >
+        menu_seq,
+      </if>
+      <if test="pid != null" >
+        pid,
+      </if>
+      <if test="createdTime != null" >
+        created_time,
+      </if>
+      <if test="updatedTime != null" >
+        updated_time,
+      </if>
+      <if test="isEffective != null" >
+        is_effective,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="menuId != null" >
+        #{menuId,jdbcType=BIGINT},
+      </if>
+      <if test="menuName != null" >
+        #{menuName,jdbcType=VARCHAR},
+      </if>
+      <if test="menuAction != null" >
+        #{menuAction,jdbcType=VARCHAR},
+      </if>
+      <if test="menuSeq != null" >
+        #{menuSeq,jdbcType=VARCHAR},
+      </if>
+      <if test="pid != null" >
+        #{pid,jdbcType=BIGINT},
+      </if>
+      <if test="createdTime != null" >
+        #{createdTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updatedTime != null" >
+        #{updatedTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isEffective != null" >
+        #{isEffective,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateMenu" parameterType="com.ssmAdmin.entity.sqlEntity.Menu" >
+    update menu
+    <set >
+      <if test="menuName != null" >
+        menu_name = #{menuName,jdbcType=VARCHAR},
+      </if>
+      <if test="menuAction != null" >
+        menu_action = #{menuAction,jdbcType=VARCHAR},
+      </if>
+      <if test="menuSeq != null" >
+        menu_seq = #{menuSeq,jdbcType=VARCHAR},
+      </if>
+      <if test="pid != null" >
+        pid = #{pid,jdbcType=BIGINT},
+      </if>
+      <if test="createdTime != null" >
+        created_time = #{createdTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updatedTime != null" >
+        updated_time = #{updatedTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isEffective != null" >
+        is_effective = #{isEffective,jdbcType=BIGINT},
+      </if>
+    </set>
+    where menu_id = #{menuId,jdbcType=BIGINT}
+  </update>
+</mapper>
